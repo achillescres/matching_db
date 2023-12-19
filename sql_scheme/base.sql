@@ -7,7 +7,8 @@ CREATE TABLE users
     age             integer      NOT NULL CHECK (age > 0),
     first_name      varchar(101) NOT NULL CHECK (len(first_name) > 0),
     last_name       varchar(101) NOT NULL CHECK (len(last_name) > 0),
-    middle_name     varchar(101) NULL
+    middle_name     varchar(101) NULL,
+    location        varchar(50)  NOT NULL CHECK (len(location) > 0),
 );
 CREATE INDEX user_login_age_first_name_last_name_middle_name ON users (login, age, first_name, last_name, middle_name);
 
@@ -19,7 +20,8 @@ CREATE PROCEDURE registerUser @Login varchar,
                               @Age integer,
                               @FirstName varchar,
                               @LastName varchar,
-                              @MiddleName varchar
+                              @MiddleName varchar,
+                              @Location varchar
 AS
 BEGIN
     -- hashed password
@@ -27,8 +29,8 @@ BEGIN
     if len(@MiddleName) = 0
         SET @MiddleName = NULL;
 
-    INSERT INTO users (login, hashed_password, sex, age, first_name, last_name, middle_name)
-    values (@Login, @hashed_password, @Sex, @Age, @FirstName, @LastName, @MiddleName);
+    INSERT INTO users (login, hashed_password, sex, age, first_name, last_name, middle_name, location)
+    values (@Login, @hashed_password, @Sex, @Age, @FirstName, @LastName, @MiddleName, @Location);
     PRINT 'Registered user ' + @Login
 END;
 GO
@@ -109,3 +111,27 @@ CREATE TABLE messages
     seen       BIT           NOT NULL DEFAULT 0
 );
 CREATE INDEX message_message_from_message_to ON messages (match_id, from_whom, to_whom);
+
+GO
+DROP PROCEDURE IF EXISTS get_recommendation;
+CREATE PROCEDURE get_recommendation @user_id BIGINT
+AS
+BEGIN
+    --     DECLARE @users_sex varchar(6);
+    DECLARE @users_location varchar(50) = (select location from users WHERE id = @user_id);
+
+    DECLARE @opposite_sex varchar(6);
+    if (select sex from users where id = @user_id) = 'MALE'
+        SET @opposite_sex = 'FEMALE'
+    ELSE
+        SET @opposite_sex = 'MALE'
+
+    -- return random user of opposite sex and same location
+    select TOP 1 id
+    from users
+    where sex = @opposite_sex
+      and location = @users_location
+      and id >= RAND(7) * IDENT_CURRENT(users.id)
+    ORDER BY id
+END;
+GO
