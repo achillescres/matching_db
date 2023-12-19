@@ -1,4 +1,5 @@
 cmd/
 ent/
-go.mod
 Makefile
+.idea
+go.*
