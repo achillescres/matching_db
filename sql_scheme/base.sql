@@ -1,6 +1,7 @@
 CREATE TABLE users
 (
     id              bigint       NOT NULL PRIMARY KEY IDENTITY,
+    user_details    bigint       NOT NULL REFERENCES user_details (id),
     login           varchar(16)  NOT NULL,
     hashed_password varchar(128) NOT NULL,
     sex             varchar(6)   NOT NULL CHECK (sex IN ('MALE', 'FEMALE')),
@@ -34,6 +35,28 @@ BEGIN
     PRINT 'Registered user ' + @Login
 END;
 GO
+
+CREATE TABLE user_details
+(
+    id               BIGINT       NOT NULL PRIMARY KEY IDENTITY,
+    self_description varchar(max) NOT NULL DEFAULT '',
+    preference_id    BIGINT       NOT NULL REFERENCES preferences (id),
+)
+
+CREATE TABLE preferences
+(
+    id        BIGINT  NOT NULL PRIMARY KEY IDENTITY,
+    age_start integer NOT NULL,
+    age_end   integer NOT NULL,
+)
+
+CREATE TABLE hobbies
+(
+    id             BIGINT        NOT NULL PRIMARY KEY IDENTITY,
+    user_detail_id BIGINT        NOT NULL REFERENCES user_details (id),
+    name           varchar(64)   NOT NULL,
+    description    varchar(3000) NOT NULL,
+)
 
 CREATE TABLE likes
 (
